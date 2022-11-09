@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CSV Order Convertor</title>
+</head>
+
+<body>
+  <h1>CSV Order Convertor</h1>
+  <form id="form">
+    <input id="files" name="file" type="file" />
+    <input type="submit" />
+  </form>
+  <script>
+    const form = document.getElementById("form");
+
+    form.addEventListener("submit", submitForm);
+
+    function submitForm(e) {
+      e.preventDefault();
+      const files = document.getElementById("files");
+      const formData = new FormData();
+      const file = files.files[0]
+      if (!file || file.type !== 'text/csv') {
+        alert('Please choose a CSV file')
+        return
+      }
+      formData.append("file", file);
+      fetch("/upload_files", {
+        method: 'POST',
+        body: formData
+      })
+        .then((response) => response.blob())
+        .then((blob) => {
+          const fileURL = URL.createObjectURL(blob)
+          const a = document.createElement('a')
+          a.href = fileURL
+          a.download = "file.csv"
+          a.click()
+        })
+        .catch((err) => ("Error occured", err));
+    }
+  </script>
+</body>
+
+</html>
