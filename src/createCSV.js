@@ -1,5 +1,6 @@
 const fs = require('fs');
 const stringify = require('csv-stringify').stringify
+const {DateTime} = require('luxon')
 
 module.exports = function createCSV({records}) {
   const [headers, ...dataList] = records
@@ -28,7 +29,7 @@ module.exports = function createCSV({records}) {
     ["", "insuranceFee"],
     ["", "shippingServiceCost"],
     ["Leave at door", "shippingInstructions"],
-    ["OrderDate", "orderDate"],
+    ["OrderDate", "orderDate", {'dateFormat': ['d/MM/yyyy', 'd/MM/yyyy H:mm']}],
     ["Paid", "orderStatus"],
     ["eParcel", "shippingMethod"],
     ["", "consignmentNumber"],
@@ -38,7 +39,7 @@ module.exports = function createCSV({records}) {
     ["ITEM", "ITEM"],
     ["OrderID", "orderDisplayID"],
     ["ProductCode", "SKU"],
-    ["", "title"],
+    ["Description", "title"],
     ["ItemPrice", "price"],
     ["Quantity", "quantity"],
     ["", "weight"],
@@ -65,17 +66,42 @@ module.exports = function createCSV({records}) {
     getMap(CONVERT_MAP_2, targetHeader_2, convertValueMap_2)
     function getMap(map, header, valueMap) {
       map.forEach((item) => {
-        const [source, target] = item
+        const [source, target, opts] = item
         header.push(target)
-        if (source !== '') {
-          const keyIndex = headers.findIndex(key => key === source)
-          valueMap.push(keyIndex === -1 ? source : keyIndex)
-        } else {
+
+        if (source === '') {
           valueMap.push('')
+          return
         }
+
+        const keyIndex = headers.findIndex(key => key === source)
+
+        if (keyIndex === -1) {
+          valueMap.push(source)
+          return
+        }
+
+        if (opts !== undefined) {
+          valueMap.push({value: keyIndex, opts})
+          return
+        }
+
+        valueMap.push(keyIndex)
       })
     }
 
+  }
+
+  const formatDate = (value, [fromFormat = '', toFormat = ''] = []) => {
+    const dateTime = DateTime.fromFormat(value, fromFormat)
+    return dateTime.toFormat(toFormat)
+  }
+
+  const handleOpts = ({value, opts}) => {
+    if (opts.dateFormat != null) {
+      return formatDate(value, opts.dateFormat)
+    }
+    return value
   }
 
   const newDataList = dataList.reduce((list, row) => {
@@ -84,6 +110,11 @@ module.exports = function createCSV({records}) {
 
     function getRow(map, newRow) {
       map.forEach((key) => {
+        if (typeof key === 'object') {
+          const {value, opts} = key
+          newRow.push(handleOpts({value: row[value], opts}))
+          return
+        }
         if (typeof key === 'number') {
           newRow.push(row[key])
           return
