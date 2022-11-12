@@ -29,7 +29,7 @@ module.exports = function createCSV({records}) {
     ["", "insuranceFee"],
     ["", "shippingServiceCost"],
     ["Leave at door", "shippingInstructions"],
-    ["OrderDate", "orderDate", {'dateFormat': ['d/MM/yyyy', 'd/MM/yyyy H:mm']}],
+    ["OrderDate", "orderDate", {'dateFormat': ['d/M/yyyy', 'd/M/yyyy H:mm']}],
     ["Paid", "orderStatus"],
     ["eParcel", "shippingMethod"],
     ["", "consignmentNumber"],
